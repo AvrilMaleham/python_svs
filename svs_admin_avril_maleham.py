@@ -8,32 +8,46 @@ from svs_data import col_invoices,col_customers,col_treatments,col_services,db_c
                     # spb_data.py contains the data
 import datetime     # We areusing date times for this assessment, and it is
                     # available in the column_output() fn, so do not delete this line
-
-
-def list_customers():
-    # List the ID, name, telephone number, and email of all customers
-
-    # Use col_Customers for display
-   
+    
+def list_customers(customer_id=None):
+    """
+    List the ID, name, telephone number, and email of all customers
+    or a single customer if customer_id is provided.
+    """
+    
     # Convert the dictionary data into a list that displays the required data fields
     #initialise an empty list which will be used to pass data for display
     display_list = []
-    #Iterate over all the customers in the dictionary
-    for customer in db_customers.keys():
-        #append to the display list the ID, Name, Telephone and Email
-        display_list.append((customer,
-                             db_customers[customer]['details'][0],
-                             db_customers[customer]['details'][1],
-                             db_customers[customer]['details'][2]))
-    format_columns = "{: >4} | {: <15} | {: <12} | {: ^12}"
-    print("\nCustomer LIST\n")    # display a heading for the output
+    
+    # Determine which customers to display
+    if customer_id is not None:
+        customers_to_display = [customer_id]
+    else:
+        customers_to_display = db_customers.keys()
+        # display a heading for the output
+        print("\nCustomer List\n")
+    
+    #Iterate over all the customers 
+    for cid in customers_to_display:
+         #append to the display list the ID, Name, Telephone and Email
+        display_list.append((cid,
+                             db_customers[cid]['details'][0],
+                             db_customers[cid]['details'][1],
+                             db_customers[cid]['details'][2]))
+    
+    format_columns = "{: >4} | {: <20} | {: <15} | {: <12}"
+  
+    # Use col_Customers for display
     display_formatted_row(list(col_customers.keys()), format_columns)
     for row in display_list:
-        display_formatted_row(row, format_columns)   # An example of how to call column_output function
+        # An example of how to call column_output function
+        display_formatted_row(row, format_columns)
+    
+    # Pauses the code to allow the user to see the output
+    input("\nPress Enter to continue.")
 
-    input("\nPress Enter to continue.")     # Pauses the code to allow the user to see the output
 
-def list_items(data_dict: dict, col_dict: dict, title: str) -> None:
+def list_items(data_dict, col_dict, title):
     """
     Helper function for list_treatments() and list_services().
     Display a formatted table of items from the given data dictionary in alphabetical order.
@@ -44,7 +58,7 @@ def list_items(data_dict: dict, col_dict: dict, title: str) -> None:
         title (str): Title to display above the table.
     """
     
-    # Initialise an empty list to hold the service data for display
+    # Initialise an empty list to hold the data for display
     display_list = []
 
     # Iterate over all items in the dictionary
@@ -71,7 +85,7 @@ def list_items(data_dict: dict, col_dict: dict, title: str) -> None:
     input("\nPress Enter to continue.")
 
 
-def list_treatments() -> None:
+def list_treatments():
     """
     Show all available treatments with ID, name, and cost in a formatted table.
     Displays treatments in alphabetical order by name.
@@ -79,7 +93,7 @@ def list_treatments() -> None:
     list_items(db_treatments, col_treatments, "Treatment List")
 
 
-def list_services() -> None:
+def list_services():
     """
     Show all available services with ID, name, and cost in a formatted table.
     Displays services in alphabetical order by name.
@@ -87,7 +101,7 @@ def list_services() -> None:
     list_items(db_services, col_services, "Service List")
 
 
-def add_customer() -> None:
+def add_customer():
     """
     Allow user to add multiple customers to the database with input validation.
     Loops continuously until user types 'back' to return to main menu.
@@ -105,57 +119,86 @@ def add_customer() -> None:
         # Validate customer first name: letters only
         # Assuming we are only using English alphabet for purpose of this assignment
         while True:
-            first_name = input("\nPlease enter the customer first name: ")
+            first_name = input("\nPlease enter the customer first name: ").strip() # remove leading/ trailing whitespace
             if first_name.lower() == "back":
                 return
             if first_name.isalpha():
                 first_name = first_name.capitalize()
                 break
-            print("Name must be letters only.")
+            print("Error: Name must be letters only.")
             
         # Validate customer last name: letters only
         # Assuming we are only using English alphabet for purpose of this assignment
         # and no double barrelled last names
         while True:
-            last_name = input("\nPlease enter the customer last name: ")
+            last_name = input("\nPlease enter the customer last name: ").strip()
             if last_name.lower() == "back":
                 return
             if last_name.isalpha():
                 last_name = last_name.capitalize()
                 break
-            print("Name must be letters only.")
+            print("Error: Name must be letters only.")
             
         # Create full name and add to customer_details list as one entry
         full_name = f"{first_name} {last_name}"
-        customer_details.append(full_name)
+        customer_details.append(str(full_name))
 
         # Validate telephone number: digits only, between 7 and 15 digits
         while True:
-            telephone = input("\nPlease enter the customer telephone number: ")
+            telephone = input("\nPlease enter the customer telephone number: ").strip()
             if telephone.lower() == "back":
                 return
             if telephone.isdigit():
                 if len(telephone) >= 7 and len(telephone) <= 15:  
-                    customer_details.append(telephone)
+                    customer_details.append(str(telephone))
                     break
                 else:
-                    print("Telephone number must be between 7 and 15 digits.")
+                    print("Error: Telephone number must be between 7 and 15 digits.")
             else:
-                print("Telephone number must be numbers only.")
+                print("Error: Telephone number must be numbers only.")
 
-        # Validate email: must contain one '@' and '.' and be at least 6 characters long
+        # Validate email to ensure format is like 'avril@email.com'
         while True:
-            email = input("\nPlease enter the customer email: ")
+            email = input("\nPlease enter the customer email: ").strip()
             if email.lower() == "back":
                 return
-            if "@" in email and "." in email and len(email) > 5:
-                if email.count("@") == 1:
-                    customer_details.append(email)
-                    break
-                else:
-                    print("Email must contain exactly one '@' symbol.")
-            else:
-                print("Email must contain '@' and '.' and be at least 6 characters long.")
+            
+            # Check email as a whole
+            if "@" not in email or email.count("@") != 1:
+                print("Error: Email must contain exactly one '@' symbol.")
+                continue
+            
+            # Check email as a whole
+            if ".." in email:
+                print("Error: Email cannot contain consecutive periods ('..').")
+                continue
+            
+            # Check email in correct format
+            local_part, domain_part = email.split("@")
+
+            # Check local and domain parts
+            if not local_part or not domain_part or " " in local_part or " " in domain_part:
+                print("Error: Local and domain parts cannot be empty or contain spaces.")
+                continue
+
+            # Check domain part
+            if "." not in domain_part:
+                print("Error: Domain part must contain at least one '.'")
+                continue
+
+            # Check domain part
+            if domain_part[0] == "." or domain_part[-1] == ".":
+                print("Error: Domain cannot start or end with a '.'")
+                continue
+            
+            # Check local part
+            if local_part[0] == "." or local_part[-1] == ".":
+                print("Error: Local part cannot start or end with a '.'")
+                continue
+            
+            # Passed all checks
+            customer_details.append(str(email))
+            break
 
         # Generate new unique customer ID
         new_id = unique_id()
@@ -164,15 +207,16 @@ def add_customer() -> None:
         new_customer = {new_id: {'details': customer_details, 'bookings': {}}}
         db_customers.update(new_customer)
 
-        print(f"\nSuccess! Customer created: ID {new_id}, {db_customers[new_id]['details']}")
+        print("\nSuccess! Customer created.\n")
+        list_customers(new_id)
         
         # Allow user to continue or exit
         continue_input = input("\nPress Enter to add another customer or type 'back' to return to main menu: ")
-        if continue_input.lower() == "back":
+        if continue_input.strip().lower() == "back":
             return
 
 
-def get_customer() -> tuple[int, dict] | tuple[None, None]:
+def get_customer():
     """
     Helper function for add_booking() and pay_invoice() to retrieve a customer by ID.
     Prompts user to enter customer ID and validates it exists in the database.
@@ -181,26 +225,37 @@ def get_customer() -> tuple[int, dict] | tuple[None, None]:
         tuple[int, dict]: Customer ID and customer data dictionary if found.
         tuple[None, None]: None values if user types 'back' or customer not found.
     """
-    print("\nSelect customer by ID:")
+    
+    list_customers()
+    
     while True:
-        user_input = input("Please enter the customer ID: ")
+        # Assuming for the purpose of this assignment that customers are selected by ID, not name
+        # Validate customer ID: numbers only
+        user_input = input("Please enter the customer ID: ").strip()
         if user_input.lower() == "back":
             return None, None
         if not user_input.isdigit():
-            print("ID must be numbers only.")
+            print("Error: ID must be numbers only.")
             continue
+        
+        # Convert valid numeric input to integer
         customer_id = int(user_input)
+        
+        # Check if the customer ID exists in the database
         if customer_id in db_customers:
             customer = db_customers[customer_id]
-            print(f"Customer found: {customer['details'][0]} ({customer_id})")
+            
+            # Display confirmation to the user
+            print(f"Customer found: {customer['details'][0]}")
             return customer_id, customer
         else:
-            print("No customer with that ID. Please try again.")
+            # If not found, ask again
+            print("Error: No customer with that ID. Please try again.")
 
 
-def get_booking_date() -> datetime.date | None:
+def get_booking_date(must_be_future=True):
     """
-    Helper function for add_booking() to retrieve and validate a booking date.
+    Helper function for add_booking() and pay_invoice() to retrieve and validate a booking date.
     Ensures the date is valid, in the future, and properly formatted.
 
     Returns:
@@ -214,43 +269,43 @@ def get_booking_date() -> datetime.date | None:
     
     # Validate year: numbers only, in the 4 digit format
     while True:
-        year_input = input("Year (YYYY): ")
+        year_input = input("Year (YYYY): ").strip()
         if year_input.lower() == "back":
             return None
         if not year_input.isdigit():
-            print("Year must be numbers only.")
+            print("Error: Year must be numbers only.")
             continue
         if len(year_input) != 4:
-            print("Year must be exactly 4 digits (e.g., 2025).")
+            print("Error: Year must be exactly 4 digits (e.g., 2025).")
             continue
         year = int(year_input)
         break
     
     # Validate month: numbers between 1-12 only
     while True:
-        month_input = input("Month (1-12): ")
+        month_input = input("Month (1-12): ").strip()
         if month_input.lower() == "back":
             return None
         if not month_input.isdigit():
-            print("Month must be numbers only.")
+            print("Error: Month must be numbers only.")
             continue
         month = int(month_input)
         if month < 1 or month > 12:
-            print("Month must be between 1 and 12.")
+            print("Error: Month must be between 1 and 12.")
             continue
         break
     
     # Validate day: numbers between 1-31 only
     while True:
-        day_input = input("Day (1-31): ")
+        day_input = input("Day (1-31): ").strip()
         if day_input.lower() == "back":
             return None
         if not day_input.isdigit():
-            print("Day must be numbers only.")
+            print("Error: Day must be numbers only.")
             continue
         day = int(day_input)
         if day < 1 or day > 31:
-            print("Day must be between 1 and 31.")
+            print("Error: Day must be between 1 and 31.")
             continue
         break
     
@@ -258,17 +313,18 @@ def get_booking_date() -> datetime.date | None:
     try:
         input_date = datetime.date(year, month, day)
     except ValueError:
-        print("Invalid date, please try again.")
+        print("Error: Invalid date, please try again.")
         return get_booking_date()
 
-    if input_date < today:
-        print("Date must be today or later.")
-        return get_booking_date()
+    # Validate complete date, must be in the future if being used for add_booking()
+    if must_be_future and input_date < today:
+        print("Error: Date must be today or later.")
+        return get_booking_date(must_be_future=must_be_future)
 
     return input_date
     
     
-def get_items(data_dict: dict, item_type: str) -> tuple[tuple, list] | None:
+def get_items(data_dict, item_type):
     """
     Generic helper function for add_booking() to get services or treatments and their costs.
     Prompts user to enter item IDs one at a time until they type 'done'.
@@ -283,37 +339,44 @@ def get_items(data_dict: dict, item_type: str) -> tuple[tuple, list] | None:
                - item_costs is a list of corresponding costs
         None: If user types 'back' to cancel the operation
     """
+    if item_type == "service":
+        list_services()
+    else:
+        list_treatments()
     
-    # Assuming for the purpose of this assignment that treatments are selected by ID, not name
-    print(f"\nEnter {item_type} IDs one at a time.")
+    # Assuming for the purpose of this assignment that treatments/ services are selected by ID, not name
+    print(f"\nEnter IDs of {item_type}s you would like to book one at a time.")
     print("Type 'done' when finished.")
     
     selected_items = []
     item_costs = []
     
     while True:
-        item_id = input(f"\nPlease enter a {item_type} ID: ")
+        # Validate item ID: numbers only
+        item_id = input(f"\nPlease enter a {item_type} ID: ").strip()
         if item_id.lower() == 'back':
             return None 
         if item_id.lower() == 'done':
             break
         if not item_id.isdigit():
-            print("ID must be numbers only.")
+            print("Error: ID must be numbers only.")
             continue
+        # Convert valid numeric input to integer
         item = int(item_id)
+        # Check if the item ID exists in the database
         if item not in data_dict:
-            print(f"No {item_type} with that ID. Please try again.")
+            print(f"Error: No {item_type} with that ID. Please try again.")
             continue
         
-        # Ideally we should validate that they add at least one service or treatment per
-        # booking but I have not for the purposes of this assignment
         selected_items.append(item)
         item_costs.append(data_dict[item][1])
+        # Confirmation message
+        print(f"{item_type.capitalize()} added to booking.")
     
     return tuple(selected_items), item_costs
 
 
-def add_booking() -> None:
+def add_booking():
     """
     Add a new booking for an existing customer.
     Guides user through selecting customer, date, services, and treatments.
@@ -322,47 +385,68 @@ def add_booking() -> None:
     
     print("\nAdd a new booking for an existing customer")
     print("(Type 'back' at any time to return to the main menu)")
-
-    # Step 1 – Get the customer by ID
-    customer_id, customer = get_customer()
-    if customer_id is None:
-        print("Booking cancelled.")
-        return
-
-    # Step 2 – Get the booking date
-    booking_date = get_booking_date()
-    if booking_date is None:
-        print("Booking cancelled.")
-        return
     
-    # Step 3 – Get selected services and their costs
-    services_result = get_items(db_services, "service")
-    if services_result is None:
-        print("Booking cancelled.")
-        return
-    selected_services, service_costs = services_result
+    # Loop until a valid booking is made
+    while True: 
+
+        # Step 1 - Get the customer by ID
+        customer_id, customer = get_customer()
+        if customer_id is None:
+            print("Booking cancelled.")
+            return
+
+        # Step 2 - Get the booking date
+        booking_date = get_booking_date(must_be_future=True)
+        if booking_date is None:
+            print("Booking cancelled.")
+            return
+        
+        #Inner loop to ensure at least one service or treatment added to booking
+        while True: 
+            # Step 3 - Get selected services and their costs
+            services_result = get_items(db_services, "service")
+            if services_result is None:
+                print("Booking cancelled.")
+                return
+            selected_services, service_costs = services_result
+            
+            # Step 4 - Get selected treatments and their costs
+            treatments_result = get_items(db_treatments, "treatment")
+            if treatments_result is None:
+                print("Booking cancelled.")
+                return
+            selected_treatments, treatment_costs = treatments_result
+            
+            # Step 5 - Check that at least one service or treatment was selected
+            if not selected_services and not selected_treatments:
+                print("\nError: You must select at least one service or treatment.")
+                print("Please try again.\n")
+                continue  # Restart the while loop to try again
+        
+            break 
+        
+        # Step 6 - Calculate total cost of booking (to two decimal places)
+        total_cost = round(sum(service_costs) + sum(treatment_costs), 2)
+
+        # Step 7 - Save the booking to the customer's record
+        customer['bookings'][booking_date] = [selected_services, selected_treatments, total_cost, False]
+
+        # Step 8 - Show success message 
+        print(f"\nSuccess! Booking for {customer['details'][0]} ({customer_id}) created on {booking_date}")
+        if selected_services:
+            service_names = [db_services[s_id][0] for s_id in selected_services]
+            print(f"Services booked: {', '.join(service_names)}")
+        if selected_treatments:
+            treatment_names = [db_treatments[t_id][0] for t_id in selected_treatments]
+            print(f"Treatments booked: {', '.join(treatment_names)}")
+        print(f"Total cost: ${total_cost}")
     
-    # Step 4 – Get selected treatments and their costs
-    treatments_result = get_items(db_treatments, "treatment")
-    if treatments_result is None:
-        print("Booking cancelled.")
-        return
-    selected_treatments, treatment_costs = treatments_result
-    
-    # Step 5 – Calculate total cost of booking (to two decimal places)
-    total_cost = round(sum(service_costs) + sum(treatment_costs), 2)
-
-    # Step 6 – Save the booking to the customer's record
-    customer['bookings'][booking_date] = [selected_services, selected_treatments, total_cost, False]
-
-    # Step 7 – Show success message and updated bookings
-    print(f"\nSuccess! Bookings for {customer['details'][0]} ({customer_id}) are now: {db_customers[customer_id]["bookings"]}")
-    
-    # Pauses the code to allow the user to see the output
-    input("\nPress Enter to continue.")     
+        # Pauses the code to allow the user to see the output
+        input("\nPress Enter to continue.")     
+        break
 
 
-def invoices_to_pay(customer_id: int | None = None) -> bool:
+def invoices_to_pay(customer_id = None):
     """
     Display unpaid invoices with customer details in a formatted table.
     Sorted by booking date. Can show all unpaid invoices or just those for a specific customer.
@@ -435,7 +519,7 @@ def invoices_to_pay(customer_id: int | None = None) -> bool:
         return False
 
 
-def pay_invoice() -> None:
+def pay_invoice():
     """
     Process payment for an unpaid invoice.
     Allows user to select a customer, view their unpaid invoices,
@@ -445,32 +529,32 @@ def pay_invoice() -> None:
     print("\nPay an invoice for selected customer")
     print("(Type 'back' at any time to return to the main menu)")
 
-    # Step 1 – Get the customer by ID
+    # Step 1 - Get the customer by ID
     customer_id, customer = get_customer()
     if customer_id is None:
         print("Payment cancelled.")
         return
     
-    # Step 2 – Use invoices_to_pay to display unpaid invoices in table format
+    # Step 2 - Use invoices_to_pay to display unpaid invoices in table format
     has_unpaid_invoices = invoices_to_pay(customer_id)
     
-    # Step 3 – Ask for date of invoice to be paid if there are unpaid invoices
+    # Step 3 - Ask for date of invoice to be paid if there are unpaid invoices
     if not has_unpaid_invoices:
         return
     
-    print("\nSelect the date of the invoice you wish to pay or back to return to main menu")
-    booking_date = get_booking_date()
+    print("\nSelect the date of the invoice you wish to pay or type 'back' to return to main menu")
+    booking_date = get_booking_date(must_be_future=False)
     if booking_date is None:
         print("Payment cancelled.")
         return
     
-    # Step 4 – Update the invoice to paid
+    # Step 4 - Update the invoice to paid
     if booking_date not in customer['bookings']:
         print(f"\nError: No invoice found for date {booking_date}")
         input("\nPress Enter to continue.") 
         return
     
-    # Mark as paid
+    # Step 5 - Customer feedback success message
     customer['bookings'][booking_date][3] = True
     print(f"Success! Invoice for {booking_date} has been marked as paid.")
     input("\nPress Enter to continue.") 
@@ -497,7 +581,8 @@ response = input("Please enter menu choice: ")
 
 # Don't change the menu numbering or function names in this menu
 # Repeat this loop until the user enters an "X"
-while response.upper() != "X":
+# x can be upper or lower case and leading/trailing whitespace removed
+while response.strip().upper() != "X":
     if response == "1":
         list_customers()
     elif response == "2":
